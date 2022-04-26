@@ -34,8 +34,7 @@ class LinearRegression(BaseEstimator):
             `LinearRegression.fit` function.
         """
         super().__init__()
-        # self.include_intercept_, self.coefs_ = include_intercept, None
-        self.include_intercept_ = include_intercept, self.coefs_ = None
+        self.include_intercept_, self.coefs_ = include_intercept, None
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -56,7 +55,7 @@ class LinearRegression(BaseEstimator):
         X_rows, X_cols = X.shape[0], X.shape[1]
         if self.include_intercept_:
             intercept_vec = np.ones(X_rows)
-            X = np.concatenate((intercept_vec, X), axis=1)
+            X = np.insert(X, 0, intercept_vec, axis=1)
             X_cols += 1
         self.coefs_ = pinv(X) @ y
 
@@ -74,11 +73,10 @@ class LinearRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        X_rows, X_cols = X.shape[0], X.shape[1]
+        X_rows = X.shape[0]
         if self.include_intercept_:
             intercept_vec = np.ones(X_rows)
-            X = np.concatenate((intercept_vec, X), axis=1)
-            X_cols += 1
+            X = np.insert(X, 0, intercept_vec, axis=1)
         return X @ self.coefs_
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
