@@ -76,19 +76,20 @@ class Perceptron(BaseEstimator):
         Fits model with or without an intercept depending on value of `self.fit_intercept_`
         """
         X_rows, X_cols = X.shape[0], X.shape[1]
+        X_copy = X.copy()
         if self.include_intercept_:
             intercept_vec = np.ones(X_rows)
-            X = np.concatenate((intercept_vec, X), axis=1)
+            updated_X = np.insert(X_copy, 0, intercept_vec, axis=1)
             X_cols += 1
         self.coefs_ = np.zeros(X_cols)
         t = 0
         while (t < self.max_iter_):
             t += 1
             is_finished = True
+            self.callback_(self, X, y)
             for i in range(X_rows):
-                self.callback_(self, X[i], y[i])
-                if (y[i] * np.dot(self.coefs_, X[i]) <= 0):
-                    self.coefs_ = self.coefs_ + y[i] * X[i]
+                if (y[i] * np.dot(self.coefs_, updated_X[i]) <= 0):
+                    self.coefs_ = self.coefs_ + y[i] * updated_X[i]
                     is_finished = False
                     break
             if is_finished:
@@ -109,12 +110,14 @@ class Perceptron(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
+
         X_rows, X_cols = X.shape[0], X.shape[1]
+        X_copy = X.copy()
         if self.include_intercept_:
             intercept_vec = np.ones(X_rows)
-            X = np.concatenate((intercept_vec, X), axis=1)
+            X_copy = np.insert(X_copy, 0, intercept_vec, axis=1)
             X_cols += 1
-        return np.sign(X @ self.coefs_)
+        return np.sign(X_copy @ self.coefs_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

@@ -27,6 +27,10 @@ class GaussianNaiveBayes(BaseEstimator):
         super().__init__()
         self.classes_, self.mu_, self.vars_, self.pi_ = None, None, None, None
 
+    def extract_label(self, y, k):
+        idxs = np.where(y == k)
+        return idxs, len(y[idxs])
+
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
         fits a gaussian naive bayes model
@@ -39,7 +43,45 @@ class GaussianNaiveBayes(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+
+        labels = np.unique(y)
+
+        self.classes_ = np.array(labels)
+        # print(self.classes_)
+        n_classes = len(labels)
+        n_features = X.shape[1]
+        self.mu_ = np.zeros((n_classes, n_features))
+        self.vars_ = np.zeros((n_classes, n_features))
+        self.pi_ = np.zeros(n_classes)
+        m = len(y)
+        for l in labels:
+            k = np.where(self.classes_ == l)[0]
+            idx_k, n_k = self.extract_label(y, l)
+            X_k = X[idx_k].copy()
+            self.pi_[k] = n_k / m
+            self.mu_[k] = np.mean(X[idx_k], axis=0)
+            for i in range(X.shape[1]):
+                print(np.var(X_k[:,i]))
+                self.vars_[k,i] = np.var(X_k[:,i])
+
+    @staticmethod
+    def _predict_sample(x, vars, mu, pi, classes):
+        # print(x,vars, mu,pi,classes,sep = "\n")
+        k_num = len(classes)
+        likelihoods = np.zeros(k_num)
+        d = len(x)
+        for k in range(k_num):
+            # inv_cov = np.linalg.inv(np.diag(vars[k,:]))
+            # likelihoods[k] = np.log(
+            #     pi[k]) + x.T @ inv_cov @ mu[k] - 0.5 * mu[k].T @ inv_cov @ mu[k]
+            cov = np.diag(vars[k, :])
+            inv_cov = np.linalg.inv(cov)
+            det_cov = np.linalg.det(cov)
+            my_vec = x - mu[k]
+            likelihoods[k] = np.log(pi[k]) - d * np.log(
+                np.pi) / 2 - 0.5 * det_cov - 0.5 * my_vec.T @ inv_cov @ my_vec
+        max_k = np.argmax(likelihoods)
+        return classes[max_k]
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -55,7 +97,26 @@ class GaussianNaiveBayes(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        # sample_predict = np.vectorize(self._predict_sample)
+        # return sample_predict(X, self.vars_, self.mu_, self.pi_,
+        #                       self.classes_)
+
+        return np.apply_along_axis(self._predict_sample, 1, X, self.vars_, self.mu_, self.pi_,
+                              self.classes_)
+
+    @staticmethod
+    def log_likelihood_sample(x, vars, mu, pi, classes):
+        k_num = len(classes)
+        likelihoods = np.zeros(k_num)
+        d = len(x)
+        for k in range(k_num):
+            cov = np.diag(vars[k,:])
+            inv_cov = np.linalg.inv(cov)
+            det_cov = np.det(cov)
+            my_vec = x - mu[k]
+            likelihoods[k] = np.log(pi[k]) - d * np.log(
+                np.pi) / 2 - 0.5 * det_cov - 0.5 * my_vec.T @ inv_cov @ my_vec
+        return likelihoods
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -75,7 +136,13 @@ class GaussianNaiveBayes(BaseEstimator):
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        # sample_likelihood = np.vectorize(self.log_likelihood_sample)
+        # return sample_likelihood(X, self.vars_, self.mu_, self.pi_,
+        #                       self.classes_)
+
+        return np.apply_along_axis(self.log_likelihood_sample, 1, X, self.vars_, self.mu_, self.pi_,
+                              self.classes_)
+
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -95,4 +162,5 @@ class GaussianNaiveBayes(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        y_pred = self.predict(X)
+        return misclassification_error(y, y_pred)

@@ -1,9 +1,15 @@
+import numpy as np
+
 from IMLearn.learners.classifiers import Perceptron, LDA, GaussianNaiveBayes
 from typing import Tuple
 from utils import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from math import atan2, pi
+
+
+# import sys
+# sys.path.insert(0,'C:/Users/Assaf/Documents/University/Year 2 - Semester B/IML/Git Environment/IML.HUJI/datasets')
 
 
 def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -39,12 +45,13 @@ def run_perceptron():
     for n, f in [("Linearly Separable", "linearly_separable.npy"),
                  ("Linearly Inseparable", "linearly_inseparable.npy")]:
         # Load dataset
-        X, y = load_dataset(f)
+        X, y = load_dataset("../datasets/" + f)
 
         # Fit Perceptron and record loss in each fit iteration
         losses = []
 
         def loss_calc_callback(fit: Perceptron, X, y):
+            fit.fitted_ = True
             losses.append(fit.loss(X, y))
 
         model = Perceptron(callback=loss_calc_callback)
@@ -55,7 +62,7 @@ def run_perceptron():
         my_fig = go.Figure()
         my_fig.add_trace(
             go.Scatter(x=iter_num_arr, y=losses, mode="markers"))
-        my_fig.update_layout(title= f"{n} data loss per iteration",
+        my_fig.update_layout(title=f"{n} data loss per iteration",
                              xaxis_title="Iteration",
                              yaxis_title="Loss",
                              font=dict(
@@ -97,28 +104,74 @@ def compare_gaussian_classifiers():
     """
     for f in ["gaussian1.npy", "gaussian2.npy"]:
         # Load dataset
-        raise NotImplementedError()
+        X, y = load_dataset("../datasets/" + f)
 
         # Fit models and predict over training set
-        raise NotImplementedError()
-
+        naive_base = GaussianNaiveBayes()
+        lda = LDA()
+        naive_base.fit(X, y)
+        naive_pred = naive_base.predict(X)
+        lda.fit(X, y)
+        lda_pred = lda.predict(X)
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         # Create subplots
         from IMLearn.metrics import accuracy
-        raise NotImplementedError()
+        my_fig = make_subplots(rows=1, cols=2,
+                               subplot_titles=[
+                                   f"Gausian Naive Base, accuracy: {accuracy(y, naive_pred)}",
+                                   f"LDA, accuracy: {accuracy(y, lda_pred)}"],
+                               horizontal_spacing=0.01, vertical_spacing=.03)
 
         # Add traces for data-points setting symbols and colors
-        raise NotImplementedError()
+        label_symbols = np.array(["circle", "cross", "triangle-up"])
+        my_fig.add_trace(go.Scatter(x=X[:,0],y= X[:,1], mode="markers",
+                                       showlegend=False,
+                                       marker=dict(color=naive_pred,
+                                                   symbol=label_symbols[y],
+                                                   colorscale = ["red","blue","green"])),
+                            row=1, col=1)
+
+        my_fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+                                    showlegend=False,
+                                    marker=dict(color=lda_pred,
+                                                symbol=label_symbols[y],
+                                                colorscale=["red", "blue",
+                                                            "green"])),
+                         row=1, col=2)
+        # my_fig.update_layout(height=600, width=600, title_text="Stacked Subplots")
 
         # Add `X` dots specifying fitted Gaussians' means
-        raise NotImplementedError()
+        my_fig.add_trace(go.Scatter(x=naive_base.mu_[:,0], y=naive_base.mu_[:,1], mode="markers",
+                                    showlegend=False,
+                                    marker=dict(symbol=['x','x','x'],
+                                                # color=[1,1,1],
+                                                color = "black",
+                                                size = 15,
+                                                line=dict(color="black", width=0.5))),
+                         row=1, col=1)
+
+        my_fig.add_trace(go.Scatter(x=lda.mu_[:,0], y=lda.mu_[:,1],
+                                    mode="markers",
+                                    showlegend=False,
+                                    marker=dict(symbol=['x','x','x'],
+                                                color="black",
+                                                size=15,
+                                                line=dict(color="black",
+                                                          width=0.5))),
+                         row=1, col=2)
+
 
         # Add ellipses depicting the covariances of the fitted Gaussians
-        raise NotImplementedError()
+        for i in range(3):
+            naive_cov = np.diag(naive_base.vars_[i,:])
+            print(naive_cov)
+            my_fig.add_trace(get_ellipse(naive_base.mu_[i],naive_cov), row = 1,col =1)
+            my_fig.add_trace(get_ellipse(lda.mu_[i], lda.cov_), row=1, col=2)
+        my_fig.show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    # run_perceptron()
     compare_gaussian_classifiers()
