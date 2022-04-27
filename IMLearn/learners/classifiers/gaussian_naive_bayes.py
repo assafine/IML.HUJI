@@ -61,25 +61,20 @@ class GaussianNaiveBayes(BaseEstimator):
             self.pi_[k] = n_k / m
             self.mu_[k] = np.mean(X[idx_k], axis=0)
             for i in range(X.shape[1]):
-                print(np.var(X_k[:,i]))
-                self.vars_[k,i] = np.var(X_k[:,i])
+                self.vars_[k,i] = np.var(X_k[:,i],ddof=1)
 
     @staticmethod
     def _predict_sample(x, vars, mu, pi, classes):
-        # print(x,vars, mu,pi,classes,sep = "\n")
         k_num = len(classes)
         likelihoods = np.zeros(k_num)
         d = len(x)
         for k in range(k_num):
-            # inv_cov = np.linalg.inv(np.diag(vars[k,:]))
-            # likelihoods[k] = np.log(
-            #     pi[k]) + x.T @ inv_cov @ mu[k] - 0.5 * mu[k].T @ inv_cov @ mu[k]
             cov = np.diag(vars[k, :])
             inv_cov = np.linalg.inv(cov)
             det_cov = np.linalg.det(cov)
             my_vec = x - mu[k]
             likelihoods[k] = np.log(pi[k]) - d * np.log(
-                np.pi) / 2 - 0.5 * det_cov - 0.5 * my_vec.T @ inv_cov @ my_vec
+                np.pi) / 2 - 0.5 * np.log(det_cov) - 0.5 * my_vec.T @ inv_cov @ my_vec
         max_k = np.argmax(likelihoods)
         return classes[max_k]
 

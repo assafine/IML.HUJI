@@ -56,7 +56,6 @@ class LDA(BaseEstimator):
             Responses of input data to fit to
         """
         # np.append(an_array, new_column, axis=1)
-
         labels = np.unique(y)
         self.classes_ = np.array(labels)
         n_classes = len(labels)
@@ -66,14 +65,15 @@ class LDA(BaseEstimator):
         self._cov_inv = self.cov_.copy()
         self.pi_ = np.zeros(n_classes)
         m = len(y)
-        cov_update = np.vectorize(self.update_cov)
         for l in labels:
             k = np.where(self.classes_ == l)[0]
             idx_k, n_k = self.extract_label(y, l)
             self.pi_[k] = n_k / m
             self.mu_[k] = np.mean(X[idx_k], axis=0)
+            self.cov_ +=np.sum(np.apply_along_axis(self.update_cov, 1, X[idx_k],
+                                self.mu_[k]),axis=0)
 
-        self.cov_ = np.cov(X.T)
+        self.cov_ = self.cov_/(m-1)
         self._cov_inv = inv(self.cov_)
 
     @staticmethod
