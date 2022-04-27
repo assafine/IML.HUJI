@@ -2,10 +2,12 @@ from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
 
+
 class GaussianNaiveBayes(BaseEstimator):
     """
     Gaussian Naive-Bayes classifier
     """
+
     def __init__(self):
         """
         Instantiate a Gaussian Naive Bayes classifier
@@ -45,9 +47,7 @@ class GaussianNaiveBayes(BaseEstimator):
         """
 
         labels = np.unique(y)
-
         self.classes_ = np.array(labels)
-        # print(self.classes_)
         n_classes = len(labels)
         n_features = X.shape[1]
         self.mu_ = np.zeros((n_classes, n_features))
@@ -61,7 +61,7 @@ class GaussianNaiveBayes(BaseEstimator):
             self.pi_[k] = n_k / m
             self.mu_[k] = np.mean(X[idx_k], axis=0)
             for i in range(X.shape[1]):
-                self.vars_[k,i] = np.var(X_k[:,i],ddof=1)
+                self.vars_[k, i] = np.var(X_k[:, i], ddof=1)
 
     @staticmethod
     def _predict_sample(x, vars, mu, pi, classes):
@@ -74,7 +74,8 @@ class GaussianNaiveBayes(BaseEstimator):
             det_cov = np.linalg.det(cov)
             my_vec = x - mu[k]
             likelihoods[k] = np.log(pi[k]) - d * np.log(
-                np.pi) / 2 - 0.5 * np.log(det_cov) - 0.5 * my_vec.T @ inv_cov @ my_vec
+                np.pi) / 2 - 0.5 * np.log(
+                det_cov) - 0.5 * my_vec.T @ inv_cov @ my_vec
         max_k = np.argmax(likelihoods)
         return classes[max_k]
 
@@ -96,8 +97,9 @@ class GaussianNaiveBayes(BaseEstimator):
         # return sample_predict(X, self.vars_, self.mu_, self.pi_,
         #                       self.classes_)
 
-        return np.apply_along_axis(self._predict_sample, 1, X, self.vars_, self.mu_, self.pi_,
-                              self.classes_)
+        return np.apply_along_axis(self._predict_sample, 1, X, self.vars_,
+                                   self.mu_, self.pi_,
+                                   self.classes_)
 
     @staticmethod
     def log_likelihood_sample(x, vars, mu, pi, classes):
@@ -105,12 +107,13 @@ class GaussianNaiveBayes(BaseEstimator):
         likelihoods = np.zeros(k_num)
         d = len(x)
         for k in range(k_num):
-            cov = np.diag(vars[k,:])
+            cov = np.diag(vars[k, :])
             inv_cov = np.linalg.inv(cov)
             det_cov = np.det(cov)
             my_vec = x - mu[k]
             likelihoods[k] = np.log(pi[k]) - d * np.log(
-                np.pi) / 2 - 0.5 * det_cov - 0.5 * my_vec.T @ inv_cov @ my_vec
+                np.pi) / 2 - 0.5 * np.log(
+                det_cov) - 0.5 * my_vec.T @ inv_cov @ my_vec
         return likelihoods
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
@@ -129,15 +132,12 @@ class GaussianNaiveBayes(BaseEstimator):
 
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `likelihood` function")
+            raise ValueError(
+                "Estimator must first be fitted before calling `likelihood` function")
 
-        # sample_likelihood = np.vectorize(self.log_likelihood_sample)
-        # return sample_likelihood(X, self.vars_, self.mu_, self.pi_,
-        #                       self.classes_)
-
-        return np.apply_along_axis(self.log_likelihood_sample, 1, X, self.vars_, self.mu_, self.pi_,
-                              self.classes_)
-
+        return np.apply_along_axis(self.log_likelihood_sample, 1, X,
+                                   self.vars_, self.mu_, self.pi_,
+                                   self.classes_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

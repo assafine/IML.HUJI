@@ -55,7 +55,6 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        # np.append(an_array, new_column, axis=1)
         labels = np.unique(y)
         self.classes_ = np.array(labels)
         n_classes = len(labels)
@@ -70,20 +69,21 @@ class LDA(BaseEstimator):
             idx_k, n_k = self.extract_label(y, l)
             self.pi_[k] = n_k / m
             self.mu_[k] = np.mean(X[idx_k], axis=0)
-            self.cov_ +=np.sum(np.apply_along_axis(self.update_cov, 1, X[idx_k],
-                                self.mu_[k]),axis=0)
+            self.cov_ += np.sum(
+                np.apply_along_axis(self.update_cov, 1, X[idx_k],
+                                    self.mu_[k]), axis=0)
 
-        self.cov_ = self.cov_/(m-1)
+        self.cov_ = self.cov_ / (m - 1)
         self._cov_inv = inv(self.cov_)
 
     @staticmethod
     def _predict_sample(x, inv_cov, mu, pi, classes):
-        # print(x,inv_cov, mu,pi,classes,sep = "\n")
         k_num = len(classes)
         likelihoods = np.zeros(k_num)
         for k in range(k_num):
             likelihoods[k] = np.log(
-                pi[k]) + x.T @ inv_cov @ mu[k] - 0.5 * mu[k].T @ inv_cov @ mu[k]
+                pi[k]) + x.T @ inv_cov @ mu[k] - 0.5 * mu[k].T @ inv_cov @ mu[
+                                 k]
         max_k = np.argmax(likelihoods)
         return classes[max_k]
 
@@ -101,12 +101,9 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        # sample_predict = np.vectorize(self.predict_sample)
-        # return sample_predict(X, self._cov_inv, self.mu_, self.pi_,
-        #                       self.classes_)
-
-        return np.apply_along_axis(self._predict_sample, 1, X, self._cov_inv, self.mu_, self.pi_,
-                              self.classes_)
+        return np.apply_along_axis(self._predict_sample, 1, X, self._cov_inv,
+                                   self.mu_, self.pi_,
+                                   self.classes_)
 
     @staticmethod
     def log_likelihood_sample(x, inv_cov, mu, pi, classes, cov):
@@ -139,12 +136,9 @@ class LDA(BaseEstimator):
             raise ValueError(
                 "Estimator must first be fitted before calling `likelihood` function")
 
-        # sample_likelihood = np.vectorize(self.log_likelihood_sample)
-        # return sample_likelihood(X, self._cov_inv, self.mu_, self.pi_,
-        #                          self.classes_, self.cov_)
-
-        return np.apply_along_axis(self.log_likelihood_sample, 1, X, self._cov_inv, self.mu_, self.pi_,
-                                 self.classes_, self.cov_)
+        return np.apply_along_axis(self.log_likelihood_sample, 1, X,
+                                   self._cov_inv, self.mu_, self.pi_,
+                                   self.classes_, self.cov_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

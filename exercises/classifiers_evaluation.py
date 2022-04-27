@@ -66,7 +66,7 @@ def run_perceptron():
                              xaxis_title="Iteration",
                              yaxis_title="Loss",
                              font=dict(
-                                 size=18
+                                 size=16
                              ))
         my_fig.show()
 
@@ -95,6 +95,7 @@ def get_ellipse(mu: np.ndarray, cov: np.ndarray):
     ys = (l1 * np.sin(theta) * np.cos(t)) + (l2 * np.cos(theta) * np.sin(t))
 
     return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines",
+                      showlegend=False,
                       marker_color="black")
 
 
@@ -119,18 +120,19 @@ def compare_gaussian_classifiers():
         from IMLearn.metrics import accuracy
         my_fig = make_subplots(rows=1, cols=2,
                                subplot_titles=[
-                                   f"Gausian Naive Base, accuracy: {accuracy(y, naive_pred)}",
-                                   f"LDA, accuracy: {accuracy(y, lda_pred)}"],
+                                   f"Gaussian Naive Base, accuracy: {accuracy(y, naive_pred)}",
+                                   f"LDA, Accuracy: {accuracy(y, lda_pred)}"],
                                horizontal_spacing=0.01, vertical_spacing=.03)
 
         # Add traces for data-points setting symbols and colors
         label_symbols = np.array(["circle", "cross", "triangle-up"])
-        my_fig.add_trace(go.Scatter(x=X[:,0],y= X[:,1], mode="markers",
-                                       showlegend=False,
-                                       marker=dict(color=naive_pred,
-                                                   symbol=label_symbols[y],
-                                                   colorscale = ["red","blue","green"])),
-                            row=1, col=1)
+        my_fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
+                                    showlegend=False,
+                                    marker=dict(color=naive_pred,
+                                                symbol=label_symbols[y],
+                                                colorscale=["red", "blue",
+                                                            "green"])),
+                         row=1, col=1)
 
         my_fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers",
                                     showlegend=False,
@@ -142,36 +144,37 @@ def compare_gaussian_classifiers():
         # my_fig.update_layout(height=600, width=600, title_text="Stacked Subplots")
 
         # Add `X` dots specifying fitted Gaussians' means
-        my_fig.add_trace(go.Scatter(x=naive_base.mu_[:,0], y=naive_base.mu_[:,1], mode="markers",
-                                    showlegend=False,
-                                    marker=dict(symbol=['x','x','x'],
-                                                # color=[1,1,1],
-                                                color = "black",
-                                                size = 15,
-                                                line=dict(color="black", width=0.5))),
-                         row=1, col=1)
+        my_fig.add_trace(
+            go.Scatter(x=naive_base.mu_[:, 0], y=naive_base.mu_[:, 1],
+                       mode="markers",
+                       showlegend=False,
+                       marker=dict(symbol=['x', 'x', 'x'],
+                                   # color=[1,1,1],
+                                   color="black",
+                                   size=15,
+                                   line=dict(color="black", width=0.5))),
+            row=1, col=1)
 
-        my_fig.add_trace(go.Scatter(x=lda.mu_[:,0], y=lda.mu_[:,1],
+        my_fig.add_trace(go.Scatter(x=lda.mu_[:, 0], y=lda.mu_[:, 1],
                                     mode="markers",
                                     showlegend=False,
-                                    marker=dict(symbol=['x','x','x'],
+                                    marker=dict(symbol=['x', 'x', 'x'],
                                                 color="black",
                                                 size=15,
                                                 line=dict(color="black",
                                                           width=0.5))),
                          row=1, col=2)
 
-
         # Add ellipses depicting the covariances of the fitted Gaussians
         for i in range(3):
-            naive_cov = np.diag(naive_base.vars_[i,:])
-            print(naive_cov)
-            my_fig.add_trace(get_ellipse(naive_base.mu_[i],naive_cov), row = 1,col =1)
+            naive_cov = np.diag(naive_base.vars_[i, :])
+            my_fig.add_trace(get_ellipse(naive_base.mu_[i], naive_cov), row=1,
+                             col=1)
             my_fig.add_trace(get_ellipse(lda.mu_[i], lda.cov_), row=1, col=2)
         my_fig.show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    # run_perceptron()
+    run_perceptron()
     compare_gaussian_classifiers()
