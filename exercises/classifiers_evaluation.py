@@ -120,9 +120,9 @@ def compare_gaussian_classifiers():
         from IMLearn.metrics import accuracy
         my_fig = make_subplots(rows=1, cols=2,
                                subplot_titles=[
-                                   f"Gaussian Naive Base, accuracy: {accuracy(y, naive_pred)}",
+                                   f"Gaussian Naive Base, Accuracy: {accuracy(y, naive_pred)}",
                                    f"LDA, Accuracy: {accuracy(y, lda_pred)}"],
-                               horizontal_spacing=0.01, vertical_spacing=.03)
+                               horizontal_spacing=0.1, vertical_spacing=1)
 
         # Add traces for data-points setting symbols and colors
         label_symbols = np.array(["circle", "cross", "triangle-up"])
@@ -141,7 +141,7 @@ def compare_gaussian_classifiers():
                                                 colorscale=["red", "blue",
                                                             "green"])),
                          row=1, col=2)
-        # my_fig.update_layout(height=600, width=600, title_text="Stacked Subplots")
+
 
         # Add `X` dots specifying fitted Gaussians' means
         my_fig.add_trace(
@@ -171,6 +171,13 @@ def compare_gaussian_classifiers():
             my_fig.add_trace(get_ellipse(naive_base.mu_[i], naive_cov), row=1,
                              col=1)
             my_fig.add_trace(get_ellipse(lda.mu_[i], lda.cov_), row=1, col=2)
+
+        my_fig.update_layout(title = dict(text=f"Classification of {f}",
+                                          x=0.5,
+                                          y=0.98,
+                                          xanchor= 'center',
+                                          yanchor = 'top'),
+                                          font=dict(size=16))
         my_fig.show()
 
 
