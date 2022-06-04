@@ -97,13 +97,13 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
                                       showlegend=False,
                                       marker=dict(color=[
                                           ((test_y + 1) / 2).astype(int)],
-                                                  symbol=symbols[((
-                                                                              test_y + 1) / 2).astype(
-                                                      int)],
-                                                  colorscale=[custom[0],
-                                                              custom[-1]],
-                                                  line=dict(color="black",
-                                                            width=1)))],
+                                          symbol=symbols[((
+                                                                  test_y + 1) / 2).astype(
+                                              int)],
+                                          colorscale=[custom[0],
+                                                      custom[-1]],
+                                          line=dict(color="black",
+                                                    width=1)))],
                           rows=(i // 2) + 1, cols=(i % 2) + 1)
 
     my_fig.update_layout(
@@ -117,7 +117,8 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
     my_fig.show()
 
     # Question 3: Decision surface of best performing ensemble
-    losses = [ada_ml.partial_loss(test_X, test_y, t) for t in range(n_learners)]
+    losses = [ada_ml.partial_loss(test_X, test_y, t) for t in
+              range(n_learners)]
     min_idx = np.argmin(losses)
 
     my_fig = go.Figure()
@@ -153,8 +154,10 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
     # Question 4: Decision surface with weighted samples
 
     t = n_learners
+
     def my_predict(X):
         return ada_ml.partial_predict(X, t)
+
     my_fig = go.Figure()
     point_sizes = (ada_ml.D_[n_learners] / np.max(ada_ml.D_[n_learners])) * 10
     my_fig.add_traces([decision_surface(my_predict, lims[0], lims[1],
@@ -164,11 +167,12 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
                                   showlegend=False,
                                   marker=dict(color=[
                                       ((train_y + 1) / 2).astype(int)],
-                                      symbol=symbols[((train_y + 1) / 2).astype(
-                                          int)],
+                                      symbol=symbols[
+                                          ((train_y + 1) / 2).astype(
+                                              int)],
                                       colorscale=[custom[0],
                                                   custom[-1]],
-                                      size = point_sizes,
+                                      size=point_sizes,
                                       line=dict(color="black",
                                                 width=1)))])
 
