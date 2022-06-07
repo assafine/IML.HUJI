@@ -6,7 +6,8 @@ from IMLearn import BaseEstimator
 
 
 def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
-                   scoring: Callable[[np.ndarray, np.ndarray, ...], float], cv: int = 5) -> Tuple[float, float]:
+                   scoring: Callable[[np.ndarray, np.ndarray, ...], float],
+                   cv: int = 5) -> Tuple[float, float]:
     """
     Evaluate metric by cross-validation for given estimator
 
@@ -37,4 +38,27 @@ def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
     validation_score: float
         Average validation score over folds
     """
-    raise NotImplementedError()
+    idx_range = np.arange(X.shape[0])
+    np.random.shuffle(idx_range)
+    fold_idxs = np.array_split(idx_range, cv)
+    test_errors = []
+    train_errors = []
+    for idxs in fold_idxs:
+        train_x = X.copy()
+        train_y = y.copy()
+        # print(train_x.shape)
+        # print(train_y.shape)
+        test_x = train_x[idxs]
+        test_y = train_y[idxs]
+        train_x = np.delete(train_x, idxs)
+        train_y = np.delete(train_y, idxs)
+        # print(test_y)
+        # print(train_x.shape)
+        # print(train_y.shape)
+        predict_train_y = estimator.fit_predict(train_x, train_y)
+        # print(predict_train_y)
+        train_errors.append(scoring(predict_train_y, train_y))
+        predict_test_y = estimator.predict(test_x)
+        test_errors.append(scoring(predict_test_y, test_y))
+
+    return (np.mean(train_errors), np.mean(test_errors))
